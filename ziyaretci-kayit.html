@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ziyaretçi Kayıt</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d14;--surface:#111520;--surface2:#161c2d;
+    --border:rgba(255,255,255,0.07);
+    --accent:#3b82f6;--green:#10b981;--red:#ef4444;--gold:#f59e0b;--purple:#8b5cf6;
+    --text:#e2e8f0;--muted:#64748b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes popIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+  @keyframes scan{0%{top:6px}50%{top:calc(100% - 8px)}100%{top:6px}}
+  @keyframes successPop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+  /* HEADER */
+  .header{
+    background:var(--surface);border-bottom:1px solid var(--border);
+    padding:12px 18px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;
+  }
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;}
+  .logo-ic{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .header-r{display:flex;align-items:center;gap:10px;}
+  .conn-pill{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot-on{background:var(--green);animation:pulse 2s infinite;}
+  .dot-off{background:var(--muted);}
+  .clock{font-size:11px;color:var(--muted);}
+
+  /* NAV */
+  .nav{display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
+  .nb{flex:1;padding:12px 8px;font-size:12px;font-weight:600;background:none;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-family:'DM Sans',sans-serif;text-align:center;}
+  .nb.act{color:var(--text);border-bottom-color:var(--accent);}
+
+  .main{padding:16px;animation:fadeUp .3s ease;}
+
+  /* TOWER SELECT */
+  .tower-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .tc{border:2px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .15s;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:6px;user-select:none;}
+  .tc:active{transform:scale(.97);}
+  .tc.sa{border-color:var(--accent);background:rgba(59,130,246,.1);}
+  .tc.sb{border-color:var(--purple);background:rgba(139,92,246,.1);}
+  .ti{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;}
+  .tia{color:var(--accent);}
+  .tib{color:var(--purple);}
+  .tlbl{font-size:13px;font-weight:600;}
+  .tsel{font-size:11px;color:var(--green);font-weight:600;}
+
+  /* DAIRE INPUT */
+  .daire-wrap{margin-bottom:14px;}
+  .daire-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+  .daire-input{width:100%;background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:22px;font-family:'Syne',sans-serif;font-weight:700;outline:none;transition:border-color .15s;text-align:center;letter-spacing:2px;}
+  .daire-input:focus{border-color:var(--accent);}
+  .daire-input::placeholder{color:rgba(100,116,139,.3);font-size:16px;letter-spacing:0;}
+
+  /* NUMPAD */
+  .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+  .nk{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:20px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;text-align:center;transition:all .1s;user-select:none;color:var(--text);}
+  .nk:active{background:rgba(59,130,246,.15);border-color:var(--accent);transform:scale(.95);}
+  .nk.del{font-size:18px;color:var(--red);}
+  .nk.clr{font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif;}
+  .nk.letter{font-size:13px;color:var(--muted);}
+
+  /* CAMERA */
+  .cam-section{margin-bottom:14px;}
+  .cam-ph{width:100%;aspect-ratio:4/3;background:var(--surface2);border-radius:14px;border:2px dashed rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;}
+  .cam-ph:active{background:rgba(59,130,246,.05);border-color:var(--accent);}
+  .cam-ph-icon{font-size:48px;opacity:.2;}
+  .cam-ph-text{font-size:13px;color:var(--muted);}
+
+  .cam-live-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#000;}
+  #videoEl{width:100%;height:100%;object-fit:cover;display:block;}
+  .cam-frame{position:absolute;inset:0;pointer-events:none;}
+  .corner{position:absolute;width:20px;height:20px;}
+  .c-tl{top:8px;left:8px;border-top:3px solid var(--accent);border-left:3px solid var(--accent);border-radius:2px 0 0 0;}
+  .c-tr{top:8px;right:8px;border-top:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:0 2px 0 0;}
+  .c-bl{bottom:8px;left:8px;border-bottom:3px solid var(--accent);border-left:3px solid var(--accent);border-radius:0 0 0 2px;}
+  .c-br{bottom:8px;right:8px;border-bottom:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:0 0 2px 0;}
+  .scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scan 2s ease-in-out infinite;top:6px;}
+
+  .photo-preview{width:100%;aspect-ratio:4/3;border-radius:14px;object-fit:cover;border:2px solid var(--green);display:block;}
+
+  .cam-btn-row{display:flex;gap:8px;margin-top:10px;}
+
+  /* BUTTONS */
+  .btn{padding:12px 18px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;flex:1;user-select:none;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-save{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;font-size:16px;padding:16px;border-radius:14px;width:100%;margin-top:4px;}
+  .btn-save:disabled{opacity:.4;cursor:not-allowed;}
+  .spnr{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+
+  /* UPLOAD STATUS */
+  .upload-status{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .up-row{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .up-icon{font-size:20px;width:24px;text-align:center;}
+  .up-bar-wrap{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:6px;}
+  .up-bar{height:100%;background:var(--accent);border-radius:4px;transition:width .3s ease;width:0%;}
+
+  /* SUCCESS */
+  .success-screen{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;animation:popIn .3s ease;}
+  .success-icon{font-size:72px;animation:successPop .4s ease;}
+  .success-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin:16px 0 8px;}
+  .success-sub{color:var(--muted);font-size:14px;line-height:1.6;}
+  .success-meta{background:var(--surface2);border-radius:12px;padding:14px;margin:20px 0;width:100%;text-align:left;}
+  .sm-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);}
+  .sm-row:last-child{border:none;}
+  .sm-key{color:var(--muted);}
+  .sm-val{font-weight:600;}
+
+  /* LIST TAB */
+  .stats-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .sm-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+  .sm-val2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+  .sm-lbl{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .search-box{position:relative;margin-bottom:12px;}
+  .search-box input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px 10px 36px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
+  .search-box input:focus{border-color:var(--accent);}
+  .search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+
+  .visit-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;cursor:pointer;transition:all .15s;}
+  .visit-card:active{background:var(--surface2);}
+  .visit-thumb{width:56px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;}
+  .visit-thumb-ph{width:56px;height:44px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.4;}
+  .visit-info{flex:1;min-width:0;}
+  .visit-daire{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--gold);}
+  .visit-kule{display:inline-flex;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px;}
+  .vka{background:rgba(59,130,246,.15);color:var(--accent);}
+  .vkb{background:rgba(139,92,246,.15);color:var(--purple);}
+  .visit-time{font-size:12px;color:var(--muted);margin-top:3px;}
+  .visit-arrow{color:var(--muted);font-size:16px;}
+
+  .empty-st{text-align:center;padding:48px 20px;color:var(--muted);}
+  .empty-ic{font-size:44px;opacity:.2;margin-bottom:10px;}
+
+  /* MODAL */
+  .mover{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:flex;align-items:flex-end;justify-content:center;}
+  .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease;}
+  .modal-img{width:100%;border-radius:12px;margin-bottom:16px;}
+  .modal-close{width:100%;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:12px;}
+  .info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .info-row:last-child{border:none;}
+  .ik{color:var(--muted);}
+  .iv{font-weight:600;}
+
+  /* SETTINGS */
+  .cfg-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;}
+  .cfg-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+  label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  input[type=url],input[type=text],input[type=password]{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .15s;}
+  input:focus{border-color:var(--accent);}
+  .steps-box{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:12px;padding:14px;margin-bottom:14px;}
+  .steps-box ol{font-size:13px;color:var(--muted);line-height:2.2;padding-left:18px;}
+  .script-box{background:#060910;border-radius:10px;padding:14px;overflow-x:auto;margin:10px 0;}
+  .script-box pre{font-size:11px;color:#a5f3fc;line-height:1.7;white-space:pre-wrap;font-family:'Courier New',monospace;}
+  .info-box{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--gold);line-height:1.7;}
+
+  /* NOTIF */
+  #nw{position:fixed;top:60px;right:12px;left:12px;z-index:999;display:flex;flex-direction:column;gap:6px;max-width:480px;margin:0 auto;}
+  .notif{padding:11px 14px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:popIn .2s ease;display:flex;align-items:center;gap:8px;}
+  .ns{background:#064e3b;border:1px solid #10b981;color:#6ee7b7;}
+  .ne{background:#7f1d1d;border:1px solid #ef4444;color:#fca5a5;}
+  .ni{background:#1e3a5f;border:1px solid #3b82f6;color:#93c5fd;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-ic">🏢</div>
+    KULE<span style="color:var(--accent)">GİRİŞ</span>
+  </div>
+  <div class="header-r">
+    <div class="conn-pill"><div class="dot dot-off" id="sDot"></div><span id="sLbl" style="color:var(--muted)">Bağlı değil</span></div>
+    <div class="clock" id="clk"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nb act" onclick="goTab('k')">📷 Kayıt</button>
+  <button class="nb" onclick="goTab('l')">📋 Liste</button>
+  <button class="nb" onclick="goTab('a')">⚙️ Ayarlar</button>
+</div>
+
+<div id="nw"></div>
+
+<!-- ══════ KAYIT ══════ -->
+<div class="main" id="tab-k">
+
+  <!-- Kule -->
+  <div class="tower-row">
+    <div class="tc sa" id="twA" onclick="selTower('A')">
+      <div class="ti tia">A</div>
+      <div class="tlbl">A Kulesi</div>
+      <div class="tsel" id="tsA">✓ Seçili</div>
+    </div>
+    <div class="tc" id="twB" onclick="selTower('B')">
+      <div class="ti tib">B</div>
+      <div class="tlbl">B Kulesi</div>
+      <div class="tsel" id="tsB" style="color:var(--muted)">Seç</div>
+    </div>
+  </div>
+
+  <!-- Daire No -->
+  <div class="daire-wrap">
+    <span class="daire-label">Daire Numarası</span>
+    <input class="daire-input" id="daireInput" placeholder="Daire no girin" readonly>
+  </div>
+
+  <!-- Numpad -->
+  <div class="numpad" id="numpad"></div>
+
+  <!-- Kamera -->
+  <div class="cam-section">
+    <span class="daire-label">Kimlik Fotoğrafı</span>
+
+    <div id="phP" class="cam-ph" onclick="startCam()">
+      <div class="cam-ph-icon">🪪</div>
+      <div class="cam-ph-text">Fotoğraf çekmek için dokunun</div>
+    </div>
+
+    <div id="phL" style="display:none">
+      <div class="cam-live-wrap">
+        <video id="videoEl" autoplay playsinline muted></video>
+        <div class="cam-frame">
+          <div class="corner c-tl"></div><div class="corner c-tr"></div>
+          <div class="corner c-bl"></div><div class="corner c-br"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="phC" style="display:none">
+      <img id="captImg" class="photo-preview" alt="Kimlik">
+    </div>
+
+    <div class="cam-btn-row" id="camBtns">
+      <button class="btn btn-primary" id="bSnap" onclick="snap()" style="display:none">📸 Çek</button>
+      <button class="btn btn-ghost" id="bRetake" onclick="retake()" style="display:none">🔄 Yeniden</button>
+      <label class="btn btn-ghost" style="cursor:pointer">
+        📁 Galeriden
+        <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="loadFile(event)">
+      </label>
+    </div>
+  </div>
+
+  <!-- Kaydet -->
+  <button class="btn btn-save" id="btnSave" onclick="saveVisitor()">
+    <span id="sLab">💾 Kaydet</span>
+    <div class="spnr" id="sSpin" style="display:none"></div>
+  </button>
+
+  <!-- Upload Status -->
+  <div class="upload-status" id="upStatus" style="display:none">
+    <div class="up-row">
+      <span class="up-icon" id="upIcon">📤</span>
+      <div style="flex:1">
+        <div id="upLabel" style="font-size:13px;font-weight:600">Yükleniyor...</div>
+        <div class="up-bar-wrap"><div class="up-bar" id="upBar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Kaydedildi!</div>
+    <div class="success-sub" id="successSub"></div>
+    <div class="success-meta" id="successMeta"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="resetForm()">➕ Yeni Kayıt</button>
+  </div>
+</div>
+
+<!-- ══════ LİSTE ══════ -->
+<div class="main" id="tab-l" style="display:none">
+  <div class="stats-mini">
+    <div class="sm-card"><div class="sm-val2" id="stT">0</div><div class="sm-lbl">Toplam</div></div>
+    <div class="sm-card"><div class="sm-val2" style="color:var(--accent)" id="stA">0</div><div class="sm-lbl">A Kulesi</div></div>
+    <div class="sm-card"><div class="sm-val2" style="color:var(--purple)" id="stB">0</div><div class="sm-lbl">B Kulesi</div></div>
+  </div>
+  <div class="search-box">
+    <span class="search-ico">🔍</span>
+    <input type="text" placeholder="Daire no ile ara..." id="srch" oninput="filterList()">
+  </div>
+  <div id="listWrap"></div>
+</div>
+
+<!-- ══════ AYARLAR ══════ -->
+<div class="main" id="tab-a" style="display:none">
+
+  <div class="info-box">
+    ⚡ Fotoğraflar Google Drive'a yüklenir, ziyaretçi bilgileri Google Sheets'e kaydedilir. Her cihazdan erişebilirsiniz.
+  </div>
+
+  <div class="cfg-card">
+    <div class="cfg-title">📊 Google Apps Script Kurulumu</div>
+    <div class="steps-box">
+      <ol>
+        <li>Google Sheets'te yeni tablo açın</li>
+        <li><b>Extensions → Apps Script</b></li>
+        <li>Aşağıdaki kodu yapıştırın → Kaydedin</li>
+        <li><b>Deploy → New Deployment → Web App</b></li>
+        <li>Execute as: <b>Me</b> · Access: <b>Anyone</b></li>
+        <li>URL'yi kopyalayıp aşağıya yapıştırın</li>
+      </ol>
+    </div>
+    <div class="script-box"><pre id="scriptTxt"></pre></div>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:14px" onclick="copyScript()">📋 Kodu Kopyala</button>
+    <div class="fg">
+      <label>Web App URL</label>
+      <input type="url" id="shURL" placeholder="https://script.google.com/macros/s/...">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveConfig()">💾 Kaydet & Bağlan</button>
+  </div>
+
+  <div class="cfg-card" style="margin-top:4px">
+    <div class="cfg-title">🗑 Yerel Veriyi Temizle</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Bu cihazdaki kayıtları siler. Google Sheets'teki veriler silinmez.</div>
+    <button class="btn btn-ghost" style="width:100%;color:var(--red);border-color:rgba(239,68,68,.2)" onclick="clearLocal()">Yerel Kayıtları Temizle</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mover" id="modal" style="display:none" onclick="closeMod()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <img id="modImg" class="modal-img" alt="" style="display:none">
+    <div id="modRows"></div>
+    <button class="modal-close" onclick="closeMod()">Kapat</button>
+  </div>
+</div>
+
+<canvas id="cv" style="display:none"></canvas>
+
+<script>
+// ══ STATE ══
+let tower='A', photoData=null, camStream=null;
+let visitors=JSON.parse(localStorage.getItem('kg_v2')||'[]');
+let sheetsURL=localStorage.getItem('kg_sh2')||'';
+
+// ══ INIT ══
+document.addEventListener('DOMContentLoaded',()=>{
+  setInterval(()=>document.getElementById('clk').textContent=new Date().toLocaleTimeString('tr-TR'),1000);
+  if(sheetsURL){document.getElementById('shURL').value=sheetsURL;setSheetsUI(true);}
+  buildNumpad();
+  setScript();
+  renderList(visitors);
+  updateStats();
+});
+
+// ══ NUMPAD ══
+function buildNumpad(){
+  const np=document.getElementById('numpad');
+  const keys=['1','2','3','4','5','6','7','8','9','A/B','0','⌫'];
+  keys.forEach(k=>{
+    const btn=document.createElement('button');
+    btn.className='nk'+(k==='⌫'?' del':k==='A/B'?' letter':'');
+    btn.textContent=k;
+    btn.onclick=()=>numPress(k);
+    np.appendChild(btn);
+  });
+}
+
+function numPress(k){
+  const inp=document.getElementById('daireInput');
+  if(k==='⌫'){inp.value=inp.value.slice(0,-1);}
+  else if(k==='A/B'){
+    // Daire harfi ekle (örn: 3A, 3B)
+    if(inp.value&&!/[AB]$/.test(inp.value)) inp.value+=inp.value.endsWith('A')?'':'A';
+    else if(/A$/.test(inp.value)) inp.value=inp.value.slice(0,-1)+'B';
+    else if(/B$/.test(inp.value)) inp.value=inp.value.slice(0,-1);
+  }
+  else if(inp.value.length<6){inp.value+=k;}
+}
+
+// ══ TABS ══
+function goTab(t){
+  ['k','l','a'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');
+  document.querySelectorAll('.nb').forEach((b,i)=>b.classList.toggle('act',['k','l','a'][i]===t));
+  if(t==='l'){renderList(visitors);updateStats();}
+}
+
+// ══ TOWER ══
+function selTower(t){
+  tower=t;
+  document.getElementById('twA').className='tc'+(t==='A'?' sa':'');
+  document.getElementById('twB').className='tc'+(t==='B'?' sb':'');
+  document.getElementById('tsA').style.color=t==='A'?'var(--green)':'var(--muted)';
+  document.getElementById('tsB').style.color=t==='B'?'var(--green)':'var(--muted)';
+  document.getElementById('tsA').textContent=t==='A'?'✓ Seçili':'Seç';
+  document.getElementById('tsB').textContent=t==='B'?'✓ Seçili':'Seç';
+}
+
+// ══ CAMERA ══
+async function startCam(){
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}
+    });
+    document.getElementById('videoEl').srcObject=camStream;
+    document.getElementById('phP').style.display='none';
+    document.getElementById('phL').style.display='block';
+    document.getElementById('phC').style.display='none';
+    document.getElementById('bSnap').style.display='inline-flex';
+    document.getElementById('bRetake').style.display='none';
+  }catch(e){
+    notify('Kamera açılamadı. Galeriden yükleyin.','error');
+  }
+}
+
+function snap(){
+  const v=document.getElementById('videoEl');
+  const cv=document.getElementById('cv');
+  cv.width=v.videoWidth;cv.height=v.videoHeight;
+  cv.getContext('2d').drawImage(v,0,0);
+  photoData=cv.toDataURL('image/jpeg',.85);
+  stopCam();
+  showPhoto();
+}
+
+function stopCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+}
+
+function loadFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{photoData=ev.target.result;showPhoto();};
+  r.readAsDataURL(f);
+  e.target.value='';
+  stopCam();
+}
+
+function showPhoto(){
+  document.getElementById('captImg').src=photoData;
+  document.getElementById('phP').style.display='none';
+  document.getElementById('phL').style.display='none';
+  document.getElementById('phC').style.display='block';
+  document.getElementById('bSnap').style.display='none';
+  document.getElementById('bRetake').style.display='inline-flex';
+}
+
+function retake(){
+  photoData=null;
+  document.getElementById('phC').style.display='none';
+  document.getElementById('phP').style.display='flex';
+  document.getElementById('bRetake').style.display='none';
+  document.getElementById('bSnap').style.display='none';
+  stopCam();
+}
+
+// ══ SAVE ══
+async function saveVisitor(){
+  const daire=document.getElementById('daireInput').value.trim();
+  if(!daire){notify('Daire numarası giriniz','error');return;}
+  if(!photoData){notify('Fotoğraf çekiniz','error');return;}
+
+  // UI
+  document.getElementById('sLab').style.display='none';
+  document.getElementById('sSpin').style.display='block';
+  document.getElementById('btnSave').disabled=true;
+  document.getElementById('upStatus').style.display='block';
+
+  const now=new Date();
+  const tarih=now.toLocaleString('tr-TR');
+  const iso=now.toISOString();
+  const id=Date.now();
+
+  const v={id,kule:tower,daire,tarih,iso,foto:photoData,sheetsRow:null,driveUrl:null};
+
+  setUpload('📤','Google Sheets\'e kaydediliyor...',30);
+
+  // Sheets'e gönder
+  let driveUrl='';
+  let sheetsOk=false;
+
+  if(sheetsURL){
+    try{
+      // Fotoğrafı base64 olarak Sheets'e gönder
+      const payload={
+        kule:tower,daire,tarih,
+        foto:photoData.substring(0,50000) // ilk 50kb base64 (thumbnail)
+      };
+      await fetch(sheetsURL,{
+        method:'POST',mode:'no-cors',
+        body:JSON.stringify(payload),
+        headers:{'Content-Type':'application/json'}
+      });
+      sheetsOk=true;
+      setUpload('✅','Sheets\'e kaydedildi',80);
+    }catch(e){
+      setUpload('⚠️','Sheets hatası — yerel kaydedildi',80);
+    }
+  }else{
+    setUpload('💾','Yerel kaydediliyor...',60);
+  }
+
+  // Yerel kaydet
+  visitors.unshift(v);
+  localStorage.setItem('kg_v2',JSON.stringify(visitors.slice(0,500))); // max 500 kayıt
+
+  setUpload('✅','Kaydedildi!',100);
+
+  setTimeout(()=>{
+    document.getElementById('upStatus').style.display='none';
+
+    // Success screen
+    const form=document.getElementById('tab-k');
+    const ss=document.getElementById('successScreen');
+
+    // Hide form elements
+    document.getElementById('tower-section')?.style && null;
+    document.querySelector('.tower-row').style.display='none';
+    document.querySelector('.daire-wrap').style.display='none';
+    document.getElementById('numpad').style.display='none';
+    document.querySelector('.cam-section').style.display='none';
+    document.getElementById('btnSave').style.display='none';
+
+    document.getElementById('successSub').textContent=
+      sheetsURL?(sheetsOk?'Google Sheets\'e kaydedildi ✓':'Yerel kaydedildi'):'Yerel kaydedildi';
+
+    document.getElementById('successMeta').innerHTML=`
+      <div class="sm-row"><span class="sm-key">Kule</span><span class="sm-val">${tower} Kulesi</span></div>
+      <div class="sm-row"><span class="sm-key">Daire</span><span class="sm-val">${daire}</span></div>
+      <div class="sm-row"><span class="sm-key">Tarih</span><span class="sm-val">${tarih}</span></div>
+    `;
+
+    ss.style.display='flex';
+    updateStats();
+  },600);
+}
+
+function setUpload(icon,label,pct){
+  document.getElementById('upIcon').textContent=icon;
+  document.getElementById('upLabel').textContent=label;
+  document.getElementById('upBar').style.width=pct+'%';
+}
+
+function resetForm(){
+  // Show form
+  document.querySelector('.tower-row').style.display='grid';
+  document.querySelector('.daire-wrap').style.display='block';
+  document.getElementById('numpad').style.display='grid';
+  document.querySelector('.cam-section').style.display='block';
+  document.getElementById('btnSave').style.display='flex';
+  document.getElementById('btnSave').disabled=false;
+  document.getElementById('sLab').style.display='inline';
+  document.getElementById('sSpin').style.display='none';
+  document.getElementById('successScreen').style.display='none';
+
+  // Reset
+  document.getElementById('daireInput').value='';
+  retake();
+  photoData=null;
+}
+
+// ══ LIST ══
+function renderList(data){
+  const wrap=document.getElementById('listWrap');
+  if(!data.length){
+    wrap.innerHTML='<div class="empty-st"><div class="empty-ic">📋</div><div>Henüz kayıt yok</div></div>';
+    return;
+  }
+  wrap.innerHTML=data.map(v=>`
+    <div class="visit-card" onclick="openMod(${v.id})">
+      ${v.foto
+        ?`<img src="${v.foto}" class="visit-thumb" alt="">`
+        :`<div class="visit-thumb-ph">🪪</div>`}
+      <div class="visit-info">
+        <div>
+          <span class="visit-daire">${v.daire}</span>
+          <span class="visit-kule vk${v.kule.toLowerCase()}">${v.kule}</span>
+        </div>
+        <div class="visit-time">${v.tarih}</div>
+      </div>
+      <div class="visit-arrow">›</div>
+    </div>`).join('');
+}
+
+function filterList(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  const f=q?visitors.filter(v=>(v.daire||'').toLowerCase().includes(q)||v.kule.toLowerCase().includes(q)):visitors;
+  renderList(f);
+}
+
+function updateStats(){
+  document.getElementById('stT').textContent=visitors.length;
+  document.getElementById('stA').textContent=visitors.filter(v=>v.kule==='A').length;
+  document.getElementById('stB').textContent=visitors.filter(v=>v.kule==='B').length;
+}
+
+// ══ MODAL ══
+function openMod(id){
+  const v=visitors.find(x=>x.id===id);if(!v)return;
+  const img=document.getElementById('modImg');
+  if(v.foto){img.src=v.foto;img.style.display='block';}else{img.style.display='none';}
+  document.getElementById('modRows').innerHTML=[
+    ['Kule',v.kule+' Kulesi'],
+    ['Daire No',v.daire],
+    ['Tarih / Saat',v.tarih],
+  ].map(([k,val])=>`<div class="info-row"><span class="ik">${k}</span><span class="iv">${val}</span></div>`).join('');
+  document.getElementById('modal').style.display='flex';
+}
+function closeMod(){document.getElementById('modal').style.display='none';}
+
+// ══ SETTINGS ══
+function saveConfig(){
+  sheetsURL=document.getElementById('shURL').value.trim();
+  localStorage.setItem('kg_sh2',sheetsURL);
+  setSheetsUI(!!sheetsURL);
+  notify(sheetsURL?'Bağlantı kaydedildi ✓':'URL boş, bağlantı kaldırıldı','success');
+}
+
+function setSheetsUI(ok){
+  document.getElementById('sDot').className='dot '+(ok?'dot-on':'dot-off');
+  const l=document.getElementById('sLbl');
+  l.textContent=ok?'Bağlı':'Bağlı değil';
+  l.style.color=ok?'var(--green)':'var(--muted)';
+}
+
+function clearLocal(){
+  if(!confirm('Bu cihazdaki tüm kayıtlar silinecek. Emin misiniz?'))return;
+  visitors=[];
+  localStorage.removeItem('kg_v2');
+  renderList(visitors);
+  updateStats();
+  notify('Yerel kayıtlar temizlendi','success');
+}
+
+function copyScript(){
+  navigator.clipboard.writeText(document.getElementById('scriptTxt').textContent);
+  notify('Kopyalandı ✓','success');
+}
+
+function setScript(){
+  document.getElementById('scriptTxt').textContent=
+`function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getActiveSheet();
+
+    // Başlık satırı
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['Kule','Daire No','Tarih/Saat','Fotoğraf']);
+      sheet.getRange(1,1,1,4)
+        .setFontWeight('bold')
+        .setBackground('#1a73e8')
+        .setFontColor('#ffffff');
+      sheet.setColumnWidth(4, 120);
+    }
+
+    var d = JSON.parse(e.postData.contents);
+
+    // Fotoğrafı Drive'a kaydet
+    var fotoUrl = '';
+    if (d.foto && d.foto.length > 100) {
+      try {
+        var base64 = d.foto.split(',')[1] || d.foto;
+        var blob = Utilities.newBlob(
+          Utilities.base64Decode(base64),
+          'image/jpeg',
+          d.kule + '_' + d.daire + '_' + new Date().getTime() + '.jpg'
+        );
+        // Drive'da "Ziyaretci" klasörü oluştur/bul
+        var folders = DriveApp.getFoldersByName('Ziyaretci_Fotolar');
+        var folder = folders.hasNext()
+          ? folders.next()
+          : DriveApp.createFolder('Ziyaretci_Fotolar');
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        fotoUrl = file.getUrl();
+      } catch(fe) {
+        fotoUrl = 'Yükleme hatası: ' + fe.message;
+      }
+    }
+
+    sheet.appendRow([
+      d.kule,
+      d.daire,
+      d.tarih || new Date().toLocaleString('tr-TR'),
+      fotoUrl ? '=HYPERLINK("' + fotoUrl + '","📷 Fotoğraf")' : 'Yok'
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'ok', driveUrl: fotoUrl}))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({error: err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+}
+
+// ══ NOTIFY ══
+function notify(msg,type='success'){
+  const map={success:'ns',error:'ne',info:'ni'};
+  const icon={success:'✓',error:'✗',info:'ℹ'};
+  const d=document.createElement('div');
+  d.className='notif '+(map[type]||'ns');
+  d.textContent=(icon[type]||'•')+' '+msg;
+  document.getElementById('nw').appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+</script>
+</body>
+</html>
